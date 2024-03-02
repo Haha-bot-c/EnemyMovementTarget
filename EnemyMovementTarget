@@ -1,0 +1,18 @@
+using UnityEngine;
+using System.Collections;
+
+public class EnemyMovementTarget : MonoBehaviour
+{
+    [HideInInspector] public Transform target;
+    private float speed = 5f; 
+
+    void Update()
+    {
+        transform.position = Vector3.MoveTowards(transform.position, target.position, speed * Time.deltaTime);
+
+        if (transform.position == target.position)
+        {
+            Destroy(gameObject);
+        }
+    }
+}
