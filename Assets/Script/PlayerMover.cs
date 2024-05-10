@@ -3,6 +3,8 @@ using UnityEngine;
 [RequireComponent(typeof(CharacterController), typeof(Animator))]
 public class PlayerMover : MonoBehaviour
 {
+    private const string AnimatorGroundedParam = "Grounded";
+    private const string AnimatorMoveSpeedParam = "MoveSpeed";
     private const string HorizontalInput = "Horizontal";
     private const string VerticalInput = "Vertical";
     private const string CommandJump = "Jump";
@@ -11,11 +13,15 @@ public class PlayerMover : MonoBehaviour
     private const float GroundCheckRadius = 0.1f;
     private const float GroundCheckDistance = -2f;
     private const float GravityMultiplier = -2f;
+    private const float MinVerticalRotation = 0f;
+    private const float MaxVerticalRotation = 15f;
     private const int RotateMouseButton = 2;
+ 
     [SerializeField] private LayerMask _groundMask;
     [SerializeField] private float _speed = 5f;
     [SerializeField] private float _jumpHeight = 2f;
     [SerializeField] private float _gravity = -9.81f; 
+
     private float _rotationSpeed = 2f;
     private bool _isGrounded;
     private Vector3 _velocity;
@@ -38,7 +44,7 @@ public class PlayerMover : MonoBehaviour
 
     private void HandleMovement(Vector3 position)
     {
-        _animator.SetBool("Grounded", _isGrounded);
+        _animator.SetBool(AnimatorGroundedParam, _isGrounded);
         Vector3 forwardDirection = transform.forward;
         Vector3 rightDirection = transform.right;
         forwardDirection.y = 0f;
@@ -49,7 +55,7 @@ public class PlayerMover : MonoBehaviour
         float verticalInput = Input.GetAxis(VerticalInput);
         Vector3 move = rightDirection * horizontalInput + forwardDirection * verticalInput;
         _controller.Move(move * _speed * Time.deltaTime);
-        _animator.SetFloat("MoveSpeed", verticalInput);
+        _animator.SetFloat(AnimatorMoveSpeedParam, verticalInput);
     }
 
 
@@ -59,8 +65,13 @@ public class PlayerMover : MonoBehaviour
         {
             float mouseX = Input.GetAxis(MouseXAxisName);
             float mouseY = Input.GetAxis(MouseYAxisName);
-            transform.Rotate(Vector3.up, mouseX * _rotationSpeed, Space.World);
-            transform.Rotate(Vector3.left, mouseY * _rotationSpeed, Space.Self);
+            Vector3 currentRotation = transform.rotation.eulerAngles;
+            float rotationY = currentRotation.y + mouseX * _rotationSpeed;
+            Quaternion horizontalRotation = Quaternion.Euler(0f, rotationY, 0f);
+            float rotationX = currentRotation.x - mouseY * _rotationSpeed;
+            rotationX = Mathf.Clamp(rotationX, MinVerticalRotation, MaxVerticalRotation);
+            Quaternion verticalRotation = Quaternion.Euler(rotationX, 0f, 0f);
+            transform.rotation = horizontalRotation * verticalRotation;
         }
     }
 
